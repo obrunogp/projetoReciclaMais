@@ -1,0 +1,8 @@
+Pontuações por kg:
+
+- Papel e papelão: 2 pontos por kg.
+- PET: 5 pontos por kg.
+- Outros plásticos: 3 pontos por kg.
+- Vidro: 2 pontos por kg.
+- Alumínio: 10 pontos por kg.
+- Outros metais: 6 pontos por kg.

@@ -7,14 +7,18 @@ public class Material {
     private Long id;
     private String nome;
     private String descricao;
-    private BigDecimal valorPorKg;
+    private BigDecimal pontosPorKg;
     private Boolean ativo;
 
-    public Material(String nome, String descricao, double peso, BigDecimal valorPorKg) {
+    public Material(String nome, String descricao, BigDecimal pontosPorKg) {
         this.nome = nome;
         this.descricao = descricao;
-        this.valorPorKg = valorPorKg;
+        this.pontosPorKg = pontosPorKg;
         this.ativo = true;
+    }
+
+    public long getPontosPorKg() {
+        return pontosPorKg;
     }
 
     public boolean isAceito() {
