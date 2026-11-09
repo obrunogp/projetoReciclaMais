@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#eef1e8">
+  <meta name="description" content="Recicla+ — Seu descarte. Nosso futuro em comum.">
+  <title>Recicla+ | Seu descarte, nosso futuro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#inicio" aria-label="Recicla+ página inicial">
+      <span class="brand-mark">♻</span><span>Recicla<span class="brand-plus">+</span></span>
+    </a>
+    <nav class="main-nav" aria-label="Navegação principal">
+      <a href="#como-funciona">Como funciona</a>
+      <a href="#impacto">Nosso impacto</a>
+      <a href="#locais">Pontos de coleta</a>
+    </nav>
+    <div class="header-actions">
+      <button class="theme-toggle" type="button" aria-label="Ativar modo escuro" title="Alternar tema">
+        <span class="theme-icon">☾</span>
+      </button>
+      <a class="button button-dark header-login" href="login.html">Entrar <span>↗</span></a>
+      <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false">☰</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero page-shell" id="inicio">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="eyebrow-dot"></span> FUTURO CIRCULAR <span class="eyebrow-line"></span> CADA ATITUDE CONTA</p>
+        <h1>Seu descarte.<br>Nosso <span>futuro</span><br>em comum<span class="spark">✳</span></h1>
+        <div class="community">
+          <span class="avatar-stack"><i>A</i><i>B</i><i>G</i><b>+</b></span>
+          <span>Uma comunidade em movimento</span>
+        </div>
+      </div>
+      <div class="hero-art" aria-label="Ilustração do planeta Terra">
+        <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+        <div class="planet"><span class="continent continent-one"></span><span class="continent continent-two"></span><span class="continent continent-three"></span></div>
+        <div class="planet-grid"></div>
+        <div class="floating-note"><span class="note-icon">⟳</span><span><strong>Um ciclo melhor</strong><small>Cada material conta</small></span></div>
+      </div>
+    </section>
+
+    <div class="ticker" aria-label="Mensagens sobre sustentabilidade">
+      <div class="ticker-track">
+        <span>FUTURO CIRCULAR ✳</span><span>CADA ATITUDE CONTA ♻</span><span>RECICLAR É TRANSFORMAR ✳</span><span>FUTURO CIRCULAR ✳</span><span>CADA ATITUDE CONTA ♻</span><span>RECICLAR É TRANSFORMAR ✳</span><span>FUTURO CIRCULAR ✳</span><span>CADA ATITUDE CONTA ♻</span><span>FUTURO CIRCULAR ✳</span><span>CADA ATITUDE CONTA ♻</span>
+      </div>
+    </div>
+
+    <section class="steps-section page-shell" id="como-funciona">
+      <div class="section-heading">
+        <div><p class="eyebrow">DO DESCARTE AO IMPACTO</p><h2>Um pequeno gesto.<br><span>Um impacto grande.</span></h2></div>
+        <p class="section-intro">Entenda como transformar materiais que seriam descartados em novas possibilidades. <strong>Clique nos cards</strong> para descobrir o que fazer com cada tipo de resíduo.</p>
+      </div>
+      <div class="steps-grid">
+        <button class="step-card" type="button" data-modal="materials" aria-haspopup="dialog">
+          <span class="card-top"><span>01</span><span class="card-arrow">↗</span></span>
+          <span class="step-illustration"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M17 22 32 13l16 9v22L32 54 17 45Z"/><path d="m17 22 15 9 16-9M32 31v23M24 18l16 9M24 27v9m8-5v9m8-14v9"/></svg></span>
+          <span class="step-title">Separe seus materiais</span>
+          <span class="step-description">Plástico, papel, vidro ou metal. Cada material tem seu próximo destino.</span>
+          <span class="card-hint">Ver o que pode reciclar <b>↗</b></span>
+        </button>
+        <button class="step-card step-card-featured" type="button" data-modal="destination" aria-haspopup="dialog">
+          <span class="card-top"><span>02</span><span class="card-arrow">↗</span></span>
+          <span class="step-illustration"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 56s17-17 17-33a17 17 0 1 0-34 0c0 16 17 33 17 33Z"/><circle cx="32" cy="23" r="6"/></svg></span>
+          <span class="step-title">Encontre um destino</span>
+          <span class="step-description">Leve seus recicláveis a um ponto de coleta e registre sua contribuição.</span>
+          <span class="card-hint">Descobrir como funciona <b>↗</b></span>
+        </button>
+        <button class="step-card" type="button" data-modal="points" aria-haspopup="dialog">
+          <span class="card-top"><span>03</span><span class="card-arrow">↗</span></span>
+          <span class="step-illustration"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 53V31m0 7C18 38 14 28 14 18c12 0 18 7 18 20Zm0-8c0-12 7-19 19-19 0 13-7 21-19 21"/></svg></span>
+          <span class="step-title">Ganhe pontos</span>
+          <span class="step-description">Acompanhe seus pontos, veja seu impacto crescer e celebre cada conquista.</span>
+          <span class="card-hint">Conhecer as recompensas <b>↗</b></span>
+        </button>
+      </div>
+    </section>
+
+    <section class="impact-section" id="impacto">
+      <div class="impact-copy">
+        <p class="eyebrow">PEQUENAS ESCOLHAS, GRANDES MUDANÇAS</p>
+        <h2><span>Um hábito</span><br>que ajuda o<br>planeta.</h2>
+        <p>Quando cada pessoa faz a sua parte, o resultado vai muito além da lixeira. É sobre preservar recursos, movimentar comunidades e construir novas possibilidades.</p>
+        <a class="button button-lime" href="painel.html">Ver meu impacto <span>↗</span></a>
+      </div>
+      <div class="impact-list">
+        <article><span class="impact-plus">＋</span><div><h3>Preservação de recursos naturais</h3><p>A reciclagem reduz a necessidade de extrair novas matérias-primas e ajuda a economizar energia.</p></div></article>
+        <article><span class="impact-plus">＋</span><div><h3>Inclusão social e formalização</h3><p>Fortalece o trabalho de cooperativas e catadores de materiais recicláveis.</p></div></article>
+        <article><span class="impact-plus">＋</span><div><h3>Desenvolvimento da consciência ecológica</h3><p>Estimula a educação ambiental e engaja os cidadãos em práticas cotidianas de consumo sustentável.</p></div></article>
+      </div>
+    </section>
+
+    <section class="locations-section page-shell" id="locais">
+      <div class="map-visual">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3458.7175108303345!2d-51.229480699999996!3d-29.901239299999997!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x951964e6576dc797%3A0xa9ad834fd85c946a!2sCooperativa%20de%20Reciclagem%20Coopcamate!5e0!3m2!1spt-BR!2sbr!4v1793816773271!5m2!1spt-BR!2sbr" width="600" height="450" style="border:0;" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+        <div class="map-label"><strong>Ponto de coleta</strong><small>Encontre um destino próximo</small></div>
+      </div>
+      <div class="locations-copy"><p class="eyebrow">SEU PRÓXIMO PASSO</p><h2>Consulte os<br><span>locais</span></h2><p>Encontre cooperativas e pontos de entrega voluntária para dar o destino certo aos seus materiais.</p><a class="button button-dark" href="https://www.google.com/maps/search/pontos+de+coleta+reciclagem+perto+de+mim/" target="_blank" rel="noopener">Encontrar pontos próximos <span>↗</span></a></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-top"><a class="brand" href="#inicio"><span class="brand-mark">♻</span><span>Recicla<span class="brand-plus">+</span></span></a><a class="footer-email" href="mailto:reciclamais@gmail.com">✉ <span>reciclamais@gmail.com</span></a></div>
+    <div class="footer-bottom"><span>2026</span><span>UM CICLO MELHOR COMEÇA COM VOCÊ.</span></div>
+  </footer>
+
+  <div class="modal-backdrop" id="modal-backdrop" hidden>
+    <section class="info-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <button class="modal-close" type="button" aria-label="Fechar janela">×</button>
+      <p class="eyebrow" id="modal-kicker">GUIA DE RECICLAGEM</p>
+      <h2 id="modal-title">O que pode ser reciclado?</h2>
+      <div id="modal-content"></div>
+      <p class="modal-footnote">A aceitação pode variar conforme a estrutura do ponto de coleta da sua região. Em caso de dúvida, confirme com a cooperativa responsável.</p>
+    </section>
+  </div>
+</body>
+</html>
