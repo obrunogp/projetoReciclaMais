@@ -1,16 +1,22 @@
 package br.com.reciclamais.service;
 
+import br.com.reciclamais.exception.DadosInvalidosException;
+import br.com.reciclamais.exception.RecursoNaoEncontradoException;
 import br.com.reciclamais.model.entity.Coleta;
-import br.com.reciclamais.model.entity.LocalColeta;
 import br.com.reciclamais.model.entity.Material;
+import br.com.reciclamais.model.entity.PontoUsuario;
 import br.com.reciclamais.model.entity.Usuario;
+import br.com.reciclamais.model.dto.ColetaResponseDTO;
 import br.com.reciclamais.repository.ColetaRepository;
 import br.com.reciclamais.repository.MaterialRepository;
+import br.com.reciclamais.repository.PontoUsuarioRepository;
 import br.com.reciclamais.repository.UsuarioRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.List;
 
 @Service
 public class ColetaService {
@@ -18,68 +24,63 @@ public class ColetaService {
     private final ColetaRepository coletaRepository;
     private final UsuarioRepository usuarioRepository;
     private final MaterialRepository materialRepository;
+    private final PontoUsuarioRepository pontoUsuarioRepository;
 
-    public ColetaService(ColetaRepository coletaRepository, UsuarioRepository usuarioRepository, MaterialRepository materialRepository) {
+    public ColetaService(
+            ColetaRepository coletaRepository,
+            UsuarioRepository usuarioRepository,
+            MaterialRepository materialRepository,
+            PontoUsuarioRepository pontoUsuarioRepository) {
         this.coletaRepository = coletaRepository;
         this.usuarioRepository = usuarioRepository;
         this.materialRepository = materialRepository;
+        this.pontoUsuarioRepository = pontoUsuarioRepository;
     }
 
-    public BigDecimal calcularPontos(BigDecimal peso, Material material) {
-
-        if (peso == null || peso.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Peso inválido.");
+    public int calcularPontos(BigDecimal pesoKg, Material material) {
+        if (pesoKg == null || pesoKg.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new DadosInvalidosException("O peso deve ser maior que zero.");
         }
-
         if (material == null || !material.isAceito()) {
-            throw new IllegalArgumentException("Material não aceito.");
+            throw new DadosInvalidosException("Material não encontrado ou inativo.");
         }
 
-        return peso.multiply(
-                BigDecimal.valueOf(material.getPontosPorKg())
-        );
+        try {
+            return pesoKg.multiply(material.getPontosPorKg())
+                    .setScale(0, RoundingMode.HALF_UP)
+                    .intValueExact();
+        } catch (ArithmeticException ex) {
+            throw new DadosInvalidosException("O cálculo de pontos excede o limite permitido.");
+        }
     }
 
     @Transactional
-    public Coleta registrarColeta(
-            Long usuarioId,
-            Long materialId,
-            Long localColetaId,
-            BigDecimal peso) {
+    public ColetaResponseDTO registrarColeta(Integer usuarioId, Integer materialId, BigDecimal pesoKg) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado."));
+        Material material = materialRepository.findById(materialId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Material não encontrado."));
 
-        Usuario usuario = (Usuario) usuarioRepository.findById(usuarioId)
-                .orElseThrow(() ->
-                        new RuntimeException("Usuário não encontrado."));
+        int pontos = calcularPontos(pesoKg, material);
+        Coleta coleta = coletaRepository.save(new Coleta(usuario, material, pesoKg, pontos));
 
-        Material material = (Material) materialRepository.findById(materialId)
-                .orElseThrow(() ->
-                        new RuntimeException("Material não encontrado."));
+        // ponto_usuario é um extrato: o saldo é a soma dos lançamentos.
+        // O banco proíbe lançamentos iguais a zero.
+        if (pontos > 0) {
+            pontoUsuarioRepository.save(new PontoUsuario(
+                    usuario, pontos, PontoUsuario.MotivoPontos.COLETA));
+        }
 
-
-        LocalColeta localColeta = localColetaRepository.findById(localColetaId)
-                .orElseThrow(() ->
-                        new RuntimeException("Local de coleta não encontrado."));
-
-        BigDecimal pontos = calcularPontos(peso, material);
-
-        Coleta coleta = new Coleta(
-                usuario,
-                material,
-                localColeta,
-                peso
-        );
-
-        coleta.setPontosGerados(pontos);
-
-        usuario.adicionarPontos(pontos);
-
-        usuarioRepository.save(usuario);
-
-        return coletaRepository.save(coleta);
+        return ColetaResponseDTO.from(coleta);
     }
 
-
-}
-
-
+    @Transactional(readOnly = true)
+    public List<ColetaResponseDTO> listarHistorico(Integer usuarioId) {
+        if (!usuarioRepository.existsById(usuarioId)) {
+            throw new RecursoNaoEncontradoException("Usuário não encontrado.");
+        }
+        return coletaRepository.findByUsuarioIdOrderByDataHoraDesc(usuarioId).stream()
+                .map(ColetaResponseDTO::from)
+                .toList();
+    }
 }

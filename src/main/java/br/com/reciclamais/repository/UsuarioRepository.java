@@ -1,9 +1,13 @@
 package br.com.reciclamais.repository;
 
-import java.lang.ScopedValue;
+import br.com.reciclamais.model.entity.Usuario;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UsuarioRepository {
-    <T> ScopedValue<T> findById(Long usuarioId);
+import java.util.Optional;
 
-    void save(Object usuario);
+public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
+    boolean existsByCpf(String cpf);
+    boolean existsByEmail(String email);
+    Optional<Usuario> findByEmail(String email);
+    Optional<Usuario> findByCpf(String cpf);
 }

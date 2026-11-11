@@ -1,32 +1,57 @@
-
 package br.com.reciclamais.model.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "coleta")
 public class Coleta {
 
-    private Long id;
-    private Usuario usuario;
-    private Material material;
-    private LocalColeta localColeta;
-    private BigDecimal peso;
-    private LocalDateTime dataColeta;
-    private BigDecimal pontosGerados;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-    public Coleta(Usuario usuario, Material material, LocalColeta localColeta, BigDecimal peso) {
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private Usuario usuario;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "material_id", nullable = false)
+    private Material material;
+
+    @Column(name = "peso_kg", nullable = false, precision = 10, scale = 2)
+    private BigDecimal pesoKg;
+
+    @Column(name = "data_hora", nullable = false, updatable = false)
+    private LocalDateTime dataHora;
+
+    @Column(name = "pontos_gerados", nullable = false)
+    private Integer pontosGerados = 0;
+
+    protected Coleta() {
+    }
+
+    public Coleta(Usuario usuario, Material material, BigDecimal pesoKg, Integer pontosGerados) {
         this.usuario = usuario;
         this.material = material;
-        this.localColeta = localColeta;
-        this.peso = peso;
-        this.dataColeta = LocalDateTime.now();
+        this.pesoKg = pesoKg;
+        this.pontosGerados = pontosGerados;
+        this.dataHora = LocalDateTime.now();
     }
 
-
-    public void setPontosGerados(BigDecimal pontos) {
-        this.pontosGerados = pontos;
-    }
+    public Integer getId() { return id; }
+    public Usuario getUsuario() { return usuario; }
+    public Material getMaterial() { return material; }
+    public BigDecimal getPesoKg() { return pesoKg; }
+    public LocalDateTime getDataHora() { return dataHora; }
+    public Integer getPontosGerados() { return pontosGerados; }
 }
-
-
-

@@ -1,44 +1,69 @@
 package br.com.reciclamais.model.entity;
 
-import java.math.BigDecimal;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "usuario")
 public class Usuario {
 
-    private Long id;
-    private String nome;
-    private String cpf;
-    private Boolean ativo;
-    private String email;
-    private String senha;
-    private LocalDateTime dataCadastro;
-    private BigDecimal pontos;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-    public Usuario(String nome, String cpf, Boolean ativo, BigDecimal pontos, String email, String senha, LocalDateTime dataCadastro) {
+    @Column(nullable = false, length = 100)
+    private String nome;
+
+    @Column(nullable = false, unique = true, length = 14)
+    private String cpf;
+
+    @Column(nullable = false, unique = true, length = 100)
+    private String email;
+
+    @Column(name = "senha_hash", nullable = false, length = 255)
+    private String senhaHash;
+
+    @Column(length = 255)
+    private String endereco;
+
+    @Column(length = 20)
+    private String telefone;
+
+    @Column(name = "data_cadastro", nullable = false, insertable = false, updatable = false)
+    private LocalDateTime dataCadastro;
+
+    protected Usuario() {
+    }
+
+    public Usuario(String nome, String cpf, String email, String senhaHash, String endereco, String telefone) {
         this.nome = nome;
         this.cpf = cpf;
-        this.ativo = ativo;
-        this.pontos = pontos;
         this.email = email;
-        this.senha = senha;
-        this.dataCadastro = dataCadastro;
+        this.senhaHash = senhaHash;
+        this.endereco = endereco;
+        this.telefone = telefone;
     }
 
-    public void mostrarInformacoes() {
-        System.out.println("ID: " + id);
-        System.out.println("Nome: " + nome);
-        System.out.println("CPF: " + cpf);
-        System.out.println("Ativo: " + ativo);
-        System.out.println("Email: " + email);
-        System.out.println("Pontos: " + pontos);
-        System.out.println("Data de Cadastro: " + dataCadastro);
-    }
+    public Integer getId() { return id; }
+    public String getNome() { return nome; }
+    public String getCpf() { return cpf; }
+    public String getEmail() { return email; }
+    public String getEndereco() { return endereco; }
+    public String getTelefone() { return telefone; }
+    public LocalDateTime getDataCadastro() { return dataCadastro; }
 
-    public BigDecimal getPontos() {
-        return pontos;
-    }
+    @JsonIgnore
+    public String getSenhaHash() { return senhaHash; }
 
-    public void adicionarPontos(BigDecimal pontos) {
-        this.pontos = this.pontos.add(pontos);
-    }
+    public void setNome(String nome) { this.nome = nome; }
+    public void setEmail(String email) { this.email = email; }
+    public void setSenhaHash(String senhaHash) { this.senhaHash = senhaHash; }
+    public void setEndereco(String endereco) { this.endereco = endereco; }
+    public void setTelefone(String telefone) { this.telefone = telefone; }
 }

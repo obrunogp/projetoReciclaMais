@@ -49,6 +49,57 @@ A proposta também contempla um website para consultar pontos de coleta, materia
 
 *As tecnologias serão atualizadas conforme a arquitetura e as ferramentas forem definidas pela equipe.*
 
+## 🗄️ Banco de dados local
+
+O projeto usa PostgreSQL e Spring Data JPA. O arquivo [`database/schema.sql`](database/schema.sql) documenta a estrutura compartilhada do banco, sem registros de usuários.
+
+Para executar a aplicação localmente, configure estas variáveis de ambiente na configuração de execução da IDE:
+
+- `DB_URL` — URL JDBC do PostgreSQL. Se omitida, usa `jdbc:postgresql://localhost:5433/reciclagem`.
+- `DB_USERNAME` — usuário do PostgreSQL.
+- `DB_PASSWORD` — senha local do PostgreSQL.
+
+O Hibernate está configurado para apenas validar o mapeamento (`ddl-auto=validate`); a aplicação não cria nem altera tabelas automaticamente. O esquema inicial ainda precisa existir no banco antes de iniciar o Java.
+
+O esquema atual não possui tabela de locais de coleta. A entidade `LocalColeta` não é persistida até o grupo decidir se adicionará essa tabela.
+
+### Responsabilidades Java e site
+
+- **Programa Java no ponto de coleta:** abre uma janela desktop com telas para cadastrar participantes e materiais e registrar coletas. A janela usa a API Java, que grava no banco PostgreSQL.
+- **Site:** permite somente consultar os dados do participante e o histórico das coletas. Ele não oferece formulário nem ação de cadastro de coleta.
+
+### Rotas iniciais da API
+
+Com a aplicação em execução na porta `8080`, estão disponíveis:
+
+- `GET /api/materiais` — lista materiais ativos.
+- `POST /api/materiais` — cadastra um material usando um tipo já cadastrado.
+- `GET /api/tipos-materiais` — lista tipos ativos de material.
+- `POST /api/tipos-materiais` — cadastra um tipo de material.
+- `POST /api/usuarios` — cadastra um usuário; a senha é armazenada como hash.
+- `POST /api/coletas` — registra uma coleta e lança os pontos no extrato do usuário.
+- `POST /api/usuarios/identificar` — consulta usuário por CPF e retorna nome, CPF mascarado e saldo de pontos.
+- `GET /api/usuarios/{usuarioId}/coletas` — consulta o histórico de coletas.
+- `GET /api/usuarios/{usuarioId}/pontos` — consulta o saldo, calculado pela soma do extrato.
+
+O site usa as rotas de identificação e histórico. O registro de coletas fica na API Java (`POST /api/coletas`), para ser chamado pelo programa Java responsável pelo lançamento.
+
+Há exemplos encadeados de cadastro e registro no arquivo [`reciclamais.http`](reciclamais.http), que pode ser executado pelo cliente HTTP do IntelliJ. Os pedidos de criação alteram o banco quando executados.
+
+Ao executar `ReciclaMaisApplication` no IntelliJ em um computador com interface gráfica, o programa abre a janela desktop de operação do ponto de coleta. O servidor local e o banco PostgreSQL precisam estar disponíveis. Para iniciar o servidor sem abrir a janela, defina `reciclamais.desktop.enabled=false`.
+
+Exemplo de corpo para registrar uma coleta:
+
+```json
+{
+  "usuarioId": 1,
+  "materialId": 1,
+  "pesoKg": 2.50
+}
+```
+
+O usuário e o material informados precisam existir no banco; o material também precisa estar ativo. As rotas ainda não implementam autenticação e servem para desenvolvimento local.
+
 ## 🌱 Impacto esperado
 
 O Recicla+ busca contribuir para uma gestão mais organizada da reciclagem, incentivando a participação da população por meio de recompensas e facilitando o acesso a informações sobre o descarte correto de resíduos.

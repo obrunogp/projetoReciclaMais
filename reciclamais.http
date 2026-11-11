@@ -1,0 +1,55 @@
+### Cadastre primeiro um tipo de material e anote o id retornado
+POST http://localhost:8080/api/tipos-materiais
+Content-Type: application/json
+
+{
+  "nome": "Papel e papelão",
+  "descricao": "Materiais de papel limpos e secos"
+}
+
+### Cadastre um material com o id do tipo retornado acima
+POST http://localhost:8080/api/materiais
+Content-Type: application/json
+
+{
+  "nome": "Papelão",
+  "tipoMaterialId": 1,
+  "pontosPorKg": 2.00
+}
+
+### Cadastre um usuário; substitua pelo CPF e e-mail reais da pessoa
+POST http://localhost:8080/api/usuarios
+Content-Type: application/json
+
+{
+  "nome": "Nome do participante",
+  "cpf": "529.982.247-25",
+  "email": "participante@example.com",
+  "senha": "TroqueEstaSenha123!",
+  "endereco": "",
+  "telefone": ""
+}
+
+### Registre uma coleta com os IDs retornados nos cadastros acima
+POST http://localhost:8080/api/coletas
+Content-Type: application/json
+
+{
+  "usuarioId": 1,
+  "materialId": 1,
+  "pesoKg": 2.50
+}
+
+### Consulte os dados e o saldo do participante pelo CPF
+POST http://localhost:8080/api/usuarios/identificar
+Content-Type: application/json
+
+{
+  "cpf": "529.982.247-25"
+}
+
+### Consulte o histórico: troque 1 pelo id retornado na identificação
+GET http://localhost:8080/api/usuarios/1/coletas
+
+### Consulte o saldo: troque 1 pelo id retornado na identificação
+GET http://localhost:8080/api/usuarios/1/pontos
