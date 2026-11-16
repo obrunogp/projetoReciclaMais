@@ -15,6 +15,8 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -50,6 +52,13 @@ final class JanelaOperacao extends JFrame {
     private final JComboBox<Item> tipoMaterial = new JComboBox<>();
     private final JTextField pontosPorKg = new JTextField("2,00", 24);
 
+    private final JTextField cpfResgate = new JTextField(20);
+    private final JLabel participanteResgate = new JLabel("Nenhum participante localizado.");
+    private final JLabel saldoResgate = new JLabel("Saldo disponível: —");
+    private final JComboBox<RecompensaItem> recompensaResgate = new JComboBox<>();
+    private final JTextArea comprovanteResgate = new JTextArea();
+    private JsonNode usuarioResgateAtual;
+
     JanelaOperacao() {
         super("Recicla+ | Operação do ponto de coleta");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -75,6 +84,7 @@ final class JanelaOperacao extends JFrame {
         tabs.addTab("Registrar coleta", criarPainelColeta());
         tabs.addTab("Cadastrar participante", criarPainelUsuario());
         tabs.addTab("Cadastrar material", criarPainelMaterial());
+        tabs.addTab("Resgatar pontos", criarPainelResgate());
 
         status.setBorder(BorderFactory.createEmptyBorder(8, 2, 0, 2));
         status.setForeground(new Color(84, 99, 93));
@@ -82,9 +92,15 @@ final class JanelaOperacao extends JFrame {
         root.add(tabs, BorderLayout.CENTER);
         root.add(status, BorderLayout.SOUTH);
         setContentPane(root);
+        cpfResgate.getDocument().addDocumentListener(new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent event) { invalidarParticipanteResgate(); }
+            @Override public void removeUpdate(DocumentEvent event) { invalidarParticipanteResgate(); }
+            @Override public void changedUpdate(DocumentEvent event) { invalidarParticipanteResgate(); }
+        });
 
         carregarMateriais();
         carregarTipos();
+        carregarRecompensas();
     }
 
     private JPanel criarPainelColeta() {
@@ -132,6 +148,62 @@ final class JanelaOperacao extends JFrame {
         c.gridx = 1;
         c.weightx = 0.52;
         page.add(receiptScroll, c);
+        return page;
+    }
+
+    private JPanel criarPainelResgate() {
+        JPanel page = new JPanel(new GridBagLayout());
+        page.setOpaque(false);
+        GridBagConstraints p = constraints();
+
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBackground(Color.WHITE);
+        form.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(217, 226, 221)),
+                BorderFactory.createEmptyBorder(20, 20, 20, 20)));
+        GridBagConstraints f = constraints();
+        f.fill = GridBagConstraints.HORIZONTAL;
+        f.weightx = 1;
+        addHeading(form, f, "Resgatar pontos", "Confirme o participante, escolha uma recompensa e emita o comprovante.");
+        addField(form, f, 2, "CPF do participante", cpfResgate);
+        JButton localizar = new JButton("Localizar participante");
+        localizar.addActionListener(event -> localizarParticipanteResgate());
+        addRow(form, f, 4, localizar);
+        participanteResgate.setForeground(VERDE);
+        addRow(form, f, 5, participanteResgate);
+        addRow(form, f, 6, saldoResgate);
+        addField(form, f, 8, "Recompensa", recompensaResgate);
+        JButton confirmar = new JButton("Confirmar resgate e emitir comprovante");
+        confirmar.setForeground(Color.BLACK);
+        confirmar.addActionListener(event -> resgatarPontos());
+        addRow(form, f, 10, confirmar);
+
+        comprovanteResgate.setEditable(false);
+        comprovanteResgate.setLineWrap(true);
+        comprovanteResgate.setWrapStyleWord(true);
+        comprovanteResgate.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
+        comprovanteResgate.setText("RECICLA+ — COMPROVANTE DE RESGATE\n\n"
+                + "Localize um participante e selecione a recompensa desejada.\n"
+                + "O comprovante será gerado após a confirmação da troca.");
+        JScrollPane receiptScroll = new JScrollPane(comprovanteResgate);
+        receiptScroll.setBorder(BorderFactory.createTitledBorder("Comprovante de resgate"));
+        JButton imprimir = new JButton("Imprimir comprovante");
+        imprimir.addActionListener(event -> imprimirComprovanteResgate());
+        JPanel receipt = new JPanel(new BorderLayout(0, 8));
+        receipt.setOpaque(false);
+        receipt.add(receiptScroll, BorderLayout.CENTER);
+        receipt.add(imprimir, BorderLayout.SOUTH);
+
+        p.gridx = 0;
+        p.gridy = 0;
+        p.weightx = 0.48;
+        p.weighty = 1;
+        p.fill = GridBagConstraints.BOTH;
+        p.insets = new Insets(8, 8, 8, 8);
+        page.add(form, p);
+        p.gridx = 1;
+        p.weightx = 0.52;
+        page.add(receipt, p);
         return page;
     }
 
@@ -337,6 +409,90 @@ final class JanelaOperacao extends JFrame {
         }
     }
 
+    private void invalidarParticipanteResgate() {
+        usuarioResgateAtual = null;
+        participanteResgate.setText("Nenhum participante localizado.");
+        saldoResgate.setText("Saldo disponível: —");
+    }
+
+    private void localizarParticipanteResgate() {
+        try {
+            usuarioResgateAtual = api.post("/api/usuarios/identificar",
+                    Map.of("cpf", cpfResgate.getText().trim()));
+            participanteResgate.setText(usuarioResgateAtual.path("nome").asText()
+                    + " · CPF " + usuarioResgateAtual.path("cpfMascarado").asText());
+            saldoResgate.setText("Saldo disponível: "
+                    + usuarioResgateAtual.path("saldoPontos").asText("0") + " pontos");
+            setStatus("Participante localizado para resgate.", VERDE);
+        } catch (Exception exception) {
+            usuarioResgateAtual = null;
+            participanteResgate.setText("Nenhum participante localizado.");
+            saldoResgate.setText("Saldo disponível: —");
+            mostrarErro(exception);
+        }
+    }
+
+    private void resgatarPontos() {
+        try {
+            if (usuarioResgateAtual == null) {
+                throw new IllegalArgumentException("Localize o participante pelo CPF antes de resgatar pontos.");
+            }
+            RecompensaItem recompensa = (RecompensaItem) recompensaResgate.getSelectedItem();
+            if (recompensa == null) throw new IllegalArgumentException("Selecione uma recompensa disponível.");
+            int confirmacao = JOptionPane.showConfirmDialog(this,
+                    "Confirmar a troca de " + recompensa.pontos() + " pontos por " + recompensa.nome() + "?",
+                    "Confirmar resgate", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (confirmacao != JOptionPane.YES_OPTION) return;
+
+            JsonNode resgate = api.post("/api/usuarios/"
+                    + usuarioResgateAtual.path("usuarioId").asInt() + "/resgates",
+                    Map.of("recompensaCodigo", recompensa.codigo()));
+            comprovanteResgate.setText("================================================\n"
+                    + "          RECICLA+ — COMPROVANTE DE RESGATE\n"
+                    + "================================================\n"
+                    + "Código:       " + resgate.path("codigoComprovante").asText() + "\n"
+                    + "Participante: " + resgate.path("participanteNome").asText() + "\n"
+                    + "CPF:          " + resgate.path("cpfMascarado").asText() + "\n"
+                    + "Recompensa:   " + resgate.path("recompensaNome").asText() + "\n"
+                    + "Pontos usados: " + resgate.path("pontosUsados").asText() + "\n"
+                    + "Saldo restante: " + resgate.path("saldoRestante").asText("0") + " pontos\n"
+                    + "Data/hora:    " + resgate.path("dataHora").asText() + "\n"
+                    + "================================================\n"
+                    + "Apresente este comprovante ao parceiro participante.\n"
+                    + "A validação da oferta depende das regras do parceiro.\n"
+                    + "================================================");
+            saldoResgate.setText("Saldo disponível: "
+                    + resgate.path("saldoRestante").asText("0") + " pontos");
+            setStatus("Resgate registrado e comprovante emitido.", VERDE);
+        } catch (Exception exception) {
+            mostrarErro(exception);
+        }
+    }
+
+    private void imprimirComprovanteResgate() {
+        if (comprovanteResgate.getText().isBlank()) return;
+        try {
+            comprovanteResgate.print();
+        } catch (Exception exception) {
+            mostrarErro(exception);
+        }
+    }
+
+    private void carregarRecompensas() {
+        try {
+            recompensaResgate.removeAllItems();
+            for (JsonNode recompensa : api.get("/api/recompensas")) {
+                recompensaResgate.addItem(new RecompensaItem(
+                        recompensa.path("codigo").asText(),
+                        recompensa.path("nome").asText(),
+                        recompensa.path("pontosNecessarios").asInt()));
+            }
+        } catch (Exception exception) {
+            setStatus("Não foi possível carregar as recompensas: " + exception.getMessage(),
+                    new Color(163, 61, 54));
+        }
+    }
+
     private void limparCamposUsuario() {
         novoNome.setText("");
         novoCpf.setText("");
@@ -429,5 +585,10 @@ final class JanelaOperacao extends JFrame {
     private record Item(int id, String nome) {
         @Override
         public String toString() { return nome; }
+    }
+
+    private record RecompensaItem(String codigo, String nome, int pontos) {
+        @Override
+        public String toString() { return nome + " · " + pontos + " pontos"; }
     }
 }

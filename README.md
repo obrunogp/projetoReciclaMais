@@ -24,6 +24,7 @@ A proposta também contempla um website para consultar pontos de coleta, materia
 - [ ] Registro de entregas com peso, data e tipo de material.
 - [ ] Cálculo do valor correspondente a cada entrega.
 - [ ] Atribuição e consulta de pontos acumulados.
+- [ ] Resgate de pontos por recompensas com comprovante.
 - [ ] Geração de comprovantes de entrega.
 - [ ] Consulta ao histórico de entregas.
 - [ ] Visualização dos pontos de coleta e materiais aceitos.
@@ -59,14 +60,16 @@ Para executar a aplicação localmente, configure estas variáveis de ambiente n
 - `DB_USERNAME` — usuário do PostgreSQL.
 - `DB_PASSWORD` — senha local do PostgreSQL.
 
+Para preparar uma cópia do projeto para outro computador, copie `.env.example` para `.env.local` e substitua os valores de usuário e senha pelos dados daquele banco. O arquivo `.env.local` não deve ser compartilhado.
+
 O Hibernate está configurado para apenas validar o mapeamento (`ddl-auto=validate`); a aplicação não cria nem altera tabelas automaticamente. O esquema inicial ainda precisa existir no banco antes de iniciar o Java.
 
 O esquema atual não possui tabela de locais de coleta. A entidade `LocalColeta` não é persistida até o grupo decidir se adicionará essa tabela.
 
 ### Responsabilidades Java e site
 
-- **Programa Java no ponto de coleta:** abre uma janela desktop com telas para cadastrar participantes e materiais e registrar coletas. A janela usa a API Java, que grava no banco PostgreSQL.
-- **Site:** permite somente consultar os dados do participante e o histórico das coletas. Ele não oferece formulário nem ação de cadastro de coleta.
+- **Programa Java no ponto de coleta:** abre uma janela desktop com telas para cadastrar participantes e materiais, registrar coletas e resgatar pontos. Os resgates são lançados no extrato e geram um comprovante com código próprio. A janela usa a API Java, que grava no banco PostgreSQL.
+- **Site:** permite consultar os dados do participante, o saldo atual calculado pelo extrato no banco e os históricos de coletas e resgates. Ele não oferece formulário nem ação para registrar essas operações.
 
 ### Rotas iniciais da API
 
@@ -80,9 +83,14 @@ Com a aplicação em execução na porta `8080`, estão disponíveis:
 - `POST /api/coletas` — registra uma coleta e lança os pontos no extrato do usuário.
 - `POST /api/usuarios/identificar` — consulta usuário por CPF e retorna nome, CPF mascarado e saldo de pontos.
 - `GET /api/usuarios/{usuarioId}/coletas` — consulta o histórico de coletas.
+- `GET /api/usuarios/{usuarioId}/resgates` — consulta o histórico de resgates, com recompensa, pontos usados, data e código do comprovante.
 - `GET /api/usuarios/{usuarioId}/pontos` — consulta o saldo, calculado pela soma do extrato.
+- `GET /api/recompensas` — lista as recompensas e seus custos em pontos.
+- `POST /api/usuarios/{usuarioId}/resgates` — registra o resgate, debita os pontos do extrato e gera o código do comprovante.
 
-O site usa as rotas de identificação e histórico. O registro de coletas fica na API Java (`POST /api/coletas`), para ser chamado pelo programa Java responsável pelo lançamento.
+O site usa as rotas de identificação, saldo e históricos de coletas e resgates. O saldo é consultado em `GET /api/usuarios/{usuarioId}/pontos` a cada pesquisa, portanto reflete os lançamentos atuais do banco. O registro de coletas e resgates fica na API Java (`POST /api/coletas` e `POST /api/usuarios/{usuarioId}/resgates`), para ser chamado pelo programa Java responsável pela operação.
+
+O catálogo de resgates inclui ingresso no cinema (100 pontos), desconto de 10% no IPTU (1.000), desconto de 20% na internet (200), 10 litros de gasolina (1.000), uma hora em quadras parceiras (500) e desconto de 20% em farmácias (200). Cada troca valida o saldo dentro de uma transação e grava o gasto como lançamento `RESGATE`. A migration [`database/migrations/V2__criar_resgate.sql`](database/migrations/V2__criar_resgate.sql) cria a tabela necessária; aplique-a ao banco existente antes de iniciar a versão atualizada, pois o Hibernate somente valida o esquema. O comprovante registra a troca e fornece um código para apresentar ao parceiro; a validação comercial da oferta ainda depende do parceiro.
 
 Há exemplos encadeados de cadastro e registro no arquivo [`reciclamais.http`](reciclamais.http), que pode ser executado pelo cliente HTTP do IntelliJ. Os pedidos de criação alteram o banco quando executados.
 

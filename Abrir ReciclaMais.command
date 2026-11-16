@@ -1,10 +1,12 @@
 #!/bin/zsh
 
-cd "/Users/brunopiovezan/Documents/Codex/2026-11-09/cha/projetoReciclaMais" || exit 1
+PROJECT_DIR="${0:A:h}"
+cd "$PROJECT_DIR" || exit 1
+URL="http://localhost:8080/"
 
 if [ ! -f ".env.local" ]; then
   echo "Não encontrei as configurações locais do banco (.env.local)."
-  echo "Abra o ReciclaMais pelo IntelliJ uma vez para configurar o ambiente."
+  echo "Copie .env.example para .env.local e configure DB_URL, DB_USERNAME e DB_PASSWORD."
   read "?Pressione Enter para fechar esta janela..."
   exit 1
 fi
@@ -13,22 +15,51 @@ set -a
 source ".env.local"
 set +a
 
-if /usr/sbin/lsof -nP -iTCP:8080 -sTCP:LISTEN >/dev/null 2>&1; then
-  echo "O ReciclaMais já está em execução (porta 8080 ocupada)."
-  echo "Feche a execução atual no IntelliJ ou encerre o processo antes de abrir novamente."
-  read "?Pressione Enter para fechar esta janela..."
+if curl --max-time 2 -fsS "$URL" >/dev/null 2>&1; then
+  echo "O ReciclaMais já está rodando. Abrindo o site..."
+  open "$URL"
   exit 0
 fi
 
-export JAVA_HOME="/Users/brunopiovezan/Library/Java/JavaVirtualMachines/ms-21.0.13.0.2/Contents/Home"
-export PATH="$JAVA_HOME/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-
-echo "Iniciando ReciclaMais. A janela de registros aparecerá quando o sistema estiver pronto."
-"$JAVA_HOME/bin/java" -jar target/reciclamais-0.0.1-SNAPSHOT.jar
-
-app_exit_code=$?
-if [ "$app_exit_code" -ne 0 ]; then
-  echo "O ReciclaMais encerrou com erro (código $app_exit_code). Confira as mensagens acima."
+if /usr/sbin/lsof -nP -iTCP:8080 -sTCP:LISTEN >/dev/null 2>&1; then
+  echo "A porta 8080 está ocupada por outro processo. Feche-o e tente novamente."
   read "?Pressione Enter para fechar esta janela..."
+  exit 1
 fi
-exit "$app_exit_code"
+
+if [ -x "${JAVA_HOME:-}/bin/java" ]; then
+  JAVA="${JAVA_HOME}/bin/java"
+elif command -v java >/dev/null 2>&1; then
+  JAVA="$(command -v java)"
+else
+  echo "Java não foi encontrado. Instale o Java 21 para iniciar o ReciclaMais."
+  read "?Pressione Enter para fechar esta janela..."
+  exit 1
+fi
+
+if [ ! -f "target/reciclamais-0.0.1-SNAPSHOT.jar" ]; then
+  echo "O JAR não foi encontrado. Execute ./mvnw -DskipTests package primeiro."
+  read "?Pressione Enter para fechar esta janela..."
+  exit 1
+fi
+
+echo "Iniciando ReciclaMais..."
+"$JAVA" -Dreciclamais.desktop.enabled=false -jar target/reciclamais-0.0.1-SNAPSHOT.jar &
+APP_PID=$!
+
+for attempt in {1..45}; do
+  if curl --max-time 2 -fsS "$URL" >/dev/null 2>&1; then
+    echo "O ReciclaMais está pronto. Abrindo o site..."
+    open "$URL"
+    wait "$APP_PID"
+    exit $?
+  fi
+  if ! kill -0 "$APP_PID" 2>/dev/null; then
+    wait "$APP_PID"
+    exit $?
+  fi
+  sleep 1
+done
+
+echo "O ReciclaMais ainda não respondeu. Confira os erros acima."
+wait "$APP_PID"
